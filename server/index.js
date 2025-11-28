@@ -46,7 +46,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(
   cors({
     origin: [
-      "http://194.60.231.39:5173",
+      "https://astonishing-sfogliatella-ac8304.netlify.app",
       "http://localhost:5173",
       "https://cdn.fontcdn.ir/Fonts/Vazir/3b2277e82a583c9f91de41aa9e198a14d7ef7f4ccd04828abdd623acd116a88b.woff2",
       "https://us08-fontserver-cdn.servr.org/Fonts/Vazir/3b2277e82a583c9f91de41aa9e198a14d7ef7f4ccd04828abdd623acd116a88b.woff2",
@@ -88,7 +88,7 @@ app.use((err, req, res, next) => {
 const io = require("socket.io")(server, {
   cors: {
     origin: [
-      "http://194.60.231.39:5173",
+      "https://astonishing-sfogliatella-ac8304.netlify.app",
       "http://localhost:5173",
       "https://cdn.fontcdn.ir/Fonts/Vazir/3b2277e82a583c9f91de41aa9e198a14d7ef7f4ccd04828abdd623acd116a88b.woff2",
       "https://us08-fontserver-cdn.servr.org/Fonts/Vazir/3b2277e82a583c9f91de41aa9e198a14d7ef7f4ccd04828abdd623acd116a88b.woff2",
