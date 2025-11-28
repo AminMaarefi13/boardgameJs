@@ -1,0 +1,9 @@
+{
+  "appId": "com.amin.boardgame",
+  "appName": "boardgame",
+  "webDir": "dist",
+  "server": {
+    "url": "http://194.60.231.39:5173",
+    "cleartext": true
+  }
+}

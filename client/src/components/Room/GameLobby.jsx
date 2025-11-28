@@ -1,0 +1,199 @@
+import React, { useEffect } from "react";
+import { socket } from "../../network/socket";
+import { useAppContext } from "../../context/AppContext";
+import { useNavigate } from "react-router-dom";
+import GAME_TYPES from "../../UI/gameTypes";
+import GAME_STATUS_LABELS from "../../UI/gameStatusLabels";
+import { useGameContext } from "../../context/GameContext";
+
+export default function GameLobby() {
+  const navigate = useNavigate();
+
+  const { connectionState, setConnectionState } = useAppContext();
+  const { setGameState } = useGameContext();
+
+  const { playerId, currentGame, currentGameId, currentRoomId } =
+    connectionState;
+  if (!currentGame) return null;
+
+  const gameType = GAME_TYPES.find((games) => {
+    return games.value === currentGame.type;
+  });
+
+  useEffect(() => {
+    function handleGamePlayersUpdated({ gameId, gamePlayers }) {
+      if (currentGame && currentGame.gameId === gameId) {
+        setConnectionState((prev) => ({
+          ...prev,
+          currentGame: {
+            ...prev.currentGame,
+            players: gamePlayers,
+          },
+        }));
+        // socket.emit("get_all_games", { roomId: currentRoomId }, (roomGames) => {
+        //   setConnectionState((prev) => ({ ...prev, roomGames }));
+        // });
+      }
+    }
+    socket.on("game_players_updated", handleGamePlayersUpdated);
+    return () => {
+      socket.off("game_players_updated", handleGamePlayersUpdated);
+    };
+  }, [currentGame, setConnectionState]);
+
+  const handleBackToRoom = () => {
+    setConnectionState((prev) => ({
+      ...prev,
+      currentGameId: null,
+      currentGame: null,
+    }));
+    setGameState(null);
+    localStorage.removeItem("currentGameId");
+    localStorage.removeItem("currentGame");
+    socket.emit("request_room_state", { roomId: currentRoomId });
+  };
+
+  const me = currentGame.players.find((p) => p.playerId === playerId);
+
+  const handleToggleReady = () => {
+    socket.emit(
+      "toggle_ready",
+      {
+        roomId: currentRoomId,
+        gameId: currentGame.gameId,
+      },
+      (res) => {
+        if (res?.success === false) {
+          alert(res.message || "خطا در تغییر وضعیت آماده بودن");
+          return;
+        }
+        if (res?.gamePlayers) {
+          setConnectionState((prev) => ({
+            ...prev,
+            currentGame: {
+              ...prev.currentGame,
+              players: res.gamePlayers,
+              roomGames: res.games,
+            },
+          }));
+        }
+      }
+    );
+    // socket.emit("get_all_games", { roomId: currentRoomId }, (roomGames) => {
+    //   console.log(roomGames);
+    //   setConnectionState((prev) => ({ ...prev, roomGames }));
+    // });
+  };
+
+  const handleStartGame = () => {
+    console.log("currentRoomId", currentRoomId);
+    console.log("currentGame.gameId", currentGame.gameId);
+    socket.emit("start_game", {
+      roomId: currentRoomId,
+      gameId: currentGame.gameId,
+    });
+    // setConnectionState((prev) => ({
+    //   ...prev,
+    //   currentGameId: currentGame.gameId,
+    // }));
+    // navigate(`/game/${currentGameId}`);
+  };
+
+  const handleEnterGame = () => {
+    console.log("currentGameId: ", currentGameId);
+    socket.emit("request_game_state", currentGameId);
+    setConnectionState((prev) => ({
+      ...prev,
+      currentRoomId: currentRoomId,
+      currentGameId: currentGameId,
+    }));
+    localStorage.setItem("currentGameId", currentGameId);
+    navigate(`/game/${currentGameId}`);
+  };
+  return (
+    <div
+      className="max-w-md w-full bg-gray-800 p-6 rounded-lg shadow-lg mt-8 mx-auto"
+      style={{ direction: "rtl" }}
+    >
+      <h3 className="font-bold text-2xl text-blue-400 mb-4 text-center">
+        لابی بازی
+      </h3>
+      <div className="mb-3 flex flex-col gap-1">
+        <div className="flex justify-between items-center">
+          <div className="mb-3 flex flex-col gap-2">
+            <div>
+              <span className="text-gray-300">بازی: </span>
+
+              <span className="text-white font-semibold">{gameType.label}</span>
+            </div>
+            <div>
+              <span className="text-gray-300">آیدی بازی: </span>
+              <span className="text-white font-mono">{currentGame.gameId}</span>
+            </div>
+            <div>
+              <span className="text-gray-300">وضعیت: </span>
+              <span className="text-white">
+                {GAME_STATUS_LABELS[currentGame.gameStatus]}
+              </span>
+            </div>
+          </div>
+          <div>
+            <img
+              src={gameType.image}
+              alt=""
+              className="w-32 h-32 rounded object-cover block"
+              style={{ aspectRatio: "1 / 1" }}
+            />
+          </div>
+        </div>
+      </div>
+      <div className="mb-4">
+        <span className="text-gray-300">بازیکنان این بازی:</span>
+        <ul className="mt-2 space-y-2">
+          {currentGame.players.map((p) => (
+            <li
+              key={p.playerId}
+              className="bg-gray-700 px-4 py-2 rounded flex justify-between items-center"
+            >
+              <span className="text-white">{p.nickname}</span>
+              <span className={p.isReady ? "text-green-400" : "text-red-400"}>
+                {p.isReady ? "✅ آماده" : "⏳ منتظر"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      {currentGame.gameStatus === "waiting" && (
+        <button
+          onClick={handleToggleReady}
+          className="w-full py-2 mb-2 bg-purple-600 hover:bg-purple-700 rounded font-semibold"
+        >
+          {me ? "❌ بی‌خیال" : "✅ آماده‌ام"}
+        </button>
+      )}
+      {currentGame.gameCreatorId === playerId &&
+        currentGame.gameStatus === "waiting" && (
+          <button
+            onClick={handleStartGame}
+            className="w-full py-2 mb-2 bg-red-600 hover:bg-red-700 rounded font-semibold"
+          >
+            🎬 شروع بازی
+          </button>
+        )}
+      {currentGame.gameStatus === "onGoing" && (
+        <button
+          onClick={handleEnterGame}
+          className="w-full py-2 mb-2 bg-blue-600 hover:bg-blue-700 rounded font-semibold"
+        >
+          🚪 ورود به بازی
+        </button>
+      )}
+      <button
+        className="w-full py-2 bg-yellow-600 hover:bg-yellow-700 rounded font-semibold"
+        onClick={handleBackToRoom}
+      >
+        بازگشت به روم
+      </button>
+    </div>
+  );
+}

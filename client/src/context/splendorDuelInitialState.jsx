@@ -1,0 +1,18 @@
+export const splendorDuelInitialState = {
+  turn: "",
+  currentPhase: "",
+  players: [],
+  devCardsDeckLengths: [0, 0, 0],
+  devCardsVisible: [],
+  nobleTilesDeck: [],
+  whiteChipQuantity: 0,
+  blueChipQuantity: 0,
+  redChipQuantity: 0,
+  greenChipQuantity: 0,
+  blackChipQuantity: 0,
+  yellowChipQuantity: 0,
+  logs: [],
+  chat: [],
+  seen: {},
+  gameStatus: "",
+};

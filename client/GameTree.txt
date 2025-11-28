@@ -1,0 +1,14 @@
+src/
+├── game/
+│   ├── GameEngine.js         // هسته منطق بازی (قوانین، وضعیت‌ها، تغییر وضعیت‌ها)
+│   ├── phases/
+│   │   ├── nominationPhase.js   // فاز نامزدی کابینه
+│   │   ├── votingPhase.js       // فاز رأی‌گیری
+│   │   └── navigationPhase.js   // فاز حرکت کشتی
+│   ├── utils.js              // توابع کمکی
+│   └── socket.js             // مدیریت اتصال WebSocket
+├── hooks/
+│   └── useGame.js            // هماهنگی React با منطق بازی
+├── components/
+│   └── GameUI.jsx            // فقط UI، بدون منطق
+└── App.jsx
